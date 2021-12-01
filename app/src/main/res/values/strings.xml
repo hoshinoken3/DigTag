@@ -2,4 +2,5 @@
     <string name="app_name">GalleryTest</string>
     <string name="ButtonText">show</string>
     <string name="ImageDiscription">ImageFromGallery</string>
+    <string name="shareButtonText">share</string>
 </resources>
