@@ -1,6 +1,8 @@
 package com.example.gallerytest
 
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +40,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    //暗黙的インテント(テスト済)
     private fun openChooserToShare(str:String,img:Uri){
         val sendIntent = Intent().apply {
             action=Intent.ACTION_SEND
@@ -47,6 +50,34 @@ class MainActivity : AppCompatActivity() {
         }
         val shareIntent=Intent.createChooser(sendIntent,null)
         startActivity(shareIntent)
+    }
+
+    //明示的インテント(Uriで送られたアプリを起動)(twitter:com.twitter.android)
+    private fun openApplicationToShare(str:String,img:Uri,uri:String){
+        if (isApplicationInstalled(this,uri)){
+            val sendIntent = Intent().apply {
+                action=Intent.ACTION_SEND
+                data=Uri.parse(uri)
+                putExtra(Intent.EXTRA_TEXT,str)
+                putExtra(Intent.EXTRA_STREAM,img)
+                type="*/*"
+            }
+            startActivity(sendIntent)
+        }
+        else{
+            Toast.makeText(this, "there is not selected apps.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    //Uriで渡されたアプリが存在するか判定する関数
+    private fun isApplicationInstalled(context:Context,uri:String): Boolean{
+        val pm = context.packageManager
+        try {
+            pm.getPackageInfo(uri, PackageManager.GET_ACTIVITIES)
+            return true
+        } catch (e: PackageManager.NameNotFoundException) {
+            return false
+        }
     }
 
     companion object{
@@ -63,6 +94,7 @@ class MainActivity : AppCompatActivity() {
             READ_REQUEST_CODE->{
                 try{
                     resultData?.data?.also {uri->
+                        //resultDataのUriを取得
                         imgUri=uri.toString()
                         val inputStream=contentResolver?.openInputStream(uri)
                         val image=BitmapFactory.decodeStream(inputStream)
