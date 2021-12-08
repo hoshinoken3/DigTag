@@ -35,7 +35,8 @@ class MainActivity : AppCompatActivity() {
         var shareButton : Button = findViewById(R.id.button2)
         //シェアボタンのイベントリスナー
         shareButton.setOnClickListener {
-            openChooserToShare("test string",Uri.parse(imgUri))
+            //openChooserToShare("test string",Uri.parse(imgUri))
+            openApplicationToShare("test text",Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
         }
 
     }
@@ -52,17 +53,16 @@ class MainActivity : AppCompatActivity() {
         startActivity(shareIntent)
     }
 
-    //明示的インテント(Uriで送られたアプリを起動)(twitter:com.twitter.android)
-    private fun openApplicationToShare(str:String,img:Uri,uri:String){
-        if (isApplicationInstalled(this,uri)){
-            val sendIntent = Intent().apply {
-                action=Intent.ACTION_SEND
-                data=Uri.parse(uri)
+    //明示的インテント(Uriで送られたアプリを起動)
+    private fun openApplicationToShare(str:String,img:Uri,appuri:String,appadd:String){
+        if (isApplicationInstalled(this,appuri)){
+            val intent=Intent(Intent.ACTION_SEND,Uri.parse(appadd)).apply {
+                setPackage(appuri)
                 putExtra(Intent.EXTRA_TEXT,str)
                 putExtra(Intent.EXTRA_STREAM,img)
                 type="*/*"
             }
-            startActivity(sendIntent)
+            startActivity(intent)
         }
         else{
             Toast.makeText(this, "there is not selected apps.", Toast.LENGTH_SHORT).show()
@@ -108,5 +108,4 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
 }
