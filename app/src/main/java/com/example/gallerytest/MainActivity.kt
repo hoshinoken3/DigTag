@@ -19,6 +19,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setTheme(R.style.AppTheme_NoTitleBar);
         setContentView(R.layout.activity_main)
 
         var pictureButton : Button = findViewById(R.id.button)
