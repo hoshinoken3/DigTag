@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.ShareCompat
@@ -23,9 +24,18 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         var pictureButton : Button = findViewById(R.id.button)
+        var imageSelectButton : ImageButton = findViewById(R.id.imageButton)
 
         //画像選択ボタンのイベントリスナー
         pictureButton.setOnClickListener {
+            val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type="image/*"
+            }
+            startActivityForResult(intent, READ_REQUEST_CODE)
+        }
+
+        imageSelectButton.setOnClickListener{
             val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type="image/*"
@@ -99,8 +109,8 @@ class MainActivity : AppCompatActivity() {
                         imgUri=uri.toString()
                         val inputStream=contentResolver?.openInputStream(uri)
                         val image=BitmapFactory.decodeStream(inputStream)
-                        val imageView=findViewById<ImageView>(R.id.imageView)
-                        imageView.setImageBitmap(image)
+                        val ib=findViewById<ImageView>(R.id.imageButton)
+                        ib.setImageBitmap(image)
                         //ここでAIにBitmapの情報を流す
                     }
                 }catch (e:Exception){
