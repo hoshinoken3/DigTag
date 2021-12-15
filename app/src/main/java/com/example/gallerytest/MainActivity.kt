@@ -11,7 +11,6 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.core.app.ShareCompat
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
@@ -23,18 +22,9 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.AppTheme_NoTitleBar);
         setContentView(R.layout.activity_main)
 
-        var pictureButton : Button = findViewById(R.id.button)
         var imageSelectButton : ImageButton = findViewById(R.id.imageButton)
 
-        //画像選択ボタンのイベントリスナー
-        pictureButton.setOnClickListener {
-            val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type="image/*"
-            }
-            startActivityForResult(intent, READ_REQUEST_CODE)
-        }
-
+        //画像選択ボタンのイベントリスナ
         imageSelectButton.setOnClickListener{
             val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
@@ -43,16 +33,22 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(intent, READ_REQUEST_CODE)
         }
 
-        var shareButton : Button = findViewById(R.id.button2)
-        //シェアボタンのイベントリスナー
-        shareButton.setOnClickListener {
-            //openChooserToShare("test string",Uri.parse(imgUri))
+        var shareOnTwitterButton : Button = findViewById(R.id.shareOnTwitterButton)
+        //Twitterシェアボタンのイベントリスナー
+        shareOnTwitterButton.setOnClickListener {
             openApplicationToShare("test text",Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
         }
 
+        var shareOnOtherAppsButton : Button = findViewById(R.id.shareOnOtherAppsButton)
+        //他アプリシェアボタンのイベントリスナー
+        shareOnOtherAppsButton.setOnClickListener {
+            openChooserToShare("test string",Uri.parse(imgUri))
+        }
+
+
     }
 
-    //暗黙的インテント(テスト済)
+    //暗黙的インテント
     private fun openChooserToShare(str:String,img:Uri){
         val sendIntent = Intent().apply {
             action=Intent.ACTION_SEND

@@ -4,4 +4,6 @@
     <string name="ImageDiscription">ImageFromGallery</string>
     <string name="shareButtonText">share</string>
     <string name="show_selected_image">show selected image</string>
+    <string name="shareOnTwitter">share on Twitter</string>
+    <string name="shareOnOtherApps">share on Other Apps</string>
 </resources>
