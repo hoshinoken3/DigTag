@@ -7,10 +7,8 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.Toast
+import android.view.View
+import android.widget.*
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
@@ -22,6 +20,7 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.AppTheme_NoTitleBar);
         setContentView(R.layout.activity_main)
 
+        //画像選択ボタン
         var imageSelectButton : ImageButton = findViewById(R.id.imageButton)
 
         //画像選択ボタンのイベントリスナ
@@ -33,19 +32,33 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(intent, READ_REQUEST_CODE)
         }
 
+        //Twitterシェアボタン
         var shareOnTwitterButton : Button = findViewById(R.id.shareOnTwitterButton)
         //Twitterシェアボタンのイベントリスナー
         shareOnTwitterButton.setOnClickListener {
             openApplicationToShare("test text",Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
         }
-
+        //他アプリシェアボタン
         var shareOnOtherAppsButton : Button = findViewById(R.id.shareOnOtherAppsButton)
         //他アプリシェアボタンのイベントリスナー
         shareOnOtherAppsButton.setOnClickListener {
             openChooserToShare("test string",Uri.parse(imgUri))
         }
 
-
+        //
+        val taglist = listOf("#春から中大あいあああああああああああああ","#花から中大あああいああああああああああああああいああああああああああああああいあああああああああああああ","#ウマだいすきあいあああああああああああああ","#Aoiちゃん","#いきてる")
+        val tagcheckList = arrayOf(0,0,0,0,0,0)
+        /*
+        val tagcheckBox = listOf(
+            findViewById<CheckBox>(R.id.checkBox1),
+            findViewById<CheckBox>(R.id.checkBox2),
+            findViewById<CheckBox>(R.id.checkBox3),
+            findViewById<CheckBox>(R.id.checkBox4),
+            findViewById<CheckBox>(R.id.checkBox5),
+            findViewById<CheckBox>(R.id.checkBox6)
+        )
+        setCheckBoxes(taglist,tagcheckBox,tagcheckList);
+        */
     }
 
     //暗黙的インテント
@@ -84,6 +97,53 @@ class MainActivity : AppCompatActivity() {
             return true
         } catch (e: PackageManager.NameNotFoundException) {
             return false
+        }
+    }
+
+    //チェックボックス管理
+    private fun setCheckBoxes(l: List<String>, checkbox:List<CheckBox>, checklist:Array<Int>){
+        var showCounter = 0
+        var skippedCounter = 0
+        for( i in 0..5){
+            if ( showCounter < l.size){
+
+                if(l[showCounter].length>8){
+                    if(i%2==0){
+                        checkbox[i].setText(l[showCounter])
+                        showCounter++;
+                        skippedCounter++;
+                        continue;
+
+                    }else{
+                        checkbox[i].setVisibility(View.GONE);
+                        checklist[i] = -1
+                        if(l[showCounter-1].length>8) continue
+                        skippedCounter++;
+                        continue;
+                    }
+                }
+                if(i==(showCounter+skippedCounter)){
+                    checkbox[i].setText(l[showCounter])
+                    showCounter++;
+                }else{
+                    checkbox[i].setVisibility(View.GONE);
+                    checklist[i] = -1
+                }
+            }else{
+                checkbox[i].setVisibility(View.GONE);
+                checklist[i] = -1
+            }
+        }
+        for ( i in 0..5){
+            checkbox[i].setOnClickListener {
+                Toast.makeText(this, checkbox[i].isChecked.toString(), Toast.LENGTH_SHORT).show()
+
+                if(checkbox[i].isChecked){
+                    checklist[i] = 1
+                }else{
+                    checklist[i] = 0
+                }
+            }
         }
     }
 
