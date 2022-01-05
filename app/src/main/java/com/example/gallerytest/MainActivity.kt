@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.*
+import androidx.core.view.isVisible
 import java.lang.Exception
 
 class MainActivity : AppCompatActivity() {
@@ -51,20 +52,12 @@ class MainActivity : AppCompatActivity() {
             openChooserToShare("test string",Uri.parse(imgUri))
         }
 
-        //
-        val taglist = listOf("#春から中大あいあああああああああああああ","#花から中大あああいああああああああああああああいああああああああああああああいあああああああああああああ","#ウマだいすきあいあああああああああああああ","#Aoiちゃん","#いきてる")
-        val tagcheckList = arrayOf(0,0,0,0,0,0)
-        /*
-        val tagcheckBox = listOf(
-            findViewById<CheckBox>(R.id.checkBox1),
-            findViewById<CheckBox>(R.id.checkBox2),
-            findViewById<CheckBox>(R.id.checkBox3),
-            findViewById<CheckBox>(R.id.checkBox4),
-            findViewById<CheckBox>(R.id.checkBox5),
-            findViewById<CheckBox>(R.id.checkBox6)
-        )
-        setCheckBoxes(taglist,tagcheckBox,tagcheckList);
-        */
+        //ハッシュタグのチェックボックス初期化
+        initCheckBoxes()
+
+        //テストテキスト
+        val taglist = listOf("#春から中大あいあああああああああああああ","#花から中大あああいああああああああああああああいああああああああああああああいあああああああああああああ","#ウマだいすきあいあああああああああああああ","#Aoiちゃん","#いきてる","#Aoiちゃん","#いきてる","test tags")
+        setTextOnCheckBoxes(taglist)
     }
 
     //暗黙的インテント
@@ -98,65 +91,72 @@ class MainActivity : AppCompatActivity() {
     //Uriで渡されたアプリが存在するか判定する関数
     private fun isApplicationInstalled(context:Context,uri:String): Boolean{
         val pm = context.packageManager
-        try {
+        return try {
             pm.getPackageInfo(uri, PackageManager.GET_ACTIVITIES)
-            return true
+            true
         } catch (e: PackageManager.NameNotFoundException) {
-            return false
+            false
         }
+    }
+
+    //チェックボックスの初期化
+    private fun initCheckBoxes(){
+        for(i in 1..8){
+            val s:String= "tagbox$i"
+            val boxid=resources.getIdentifier(s,"id",packageName)
+            val checkBox=findViewById<CheckBox>(boxid)
+            checkBox.isChecked=false
+            checkBox.isVisible=false
+            checkBox.setText("")
+        }
+    }
+
+    //チェックボックスにハッシュタグを入れる
+    private fun setTextOnCheckBox(tag:String, boxNumber:Int){
+        val s:String= "tagbox$boxNumber"
+        val boxid=resources.getIdentifier(s,"id",packageName)
+        val tagBox=findViewById<CheckBox>(boxid)
+        if(tagBox==null) println("there is no pointer of tagbox "+boxNumber)
+        else if(tag.length>20){
+            tagBox.setText("ハッシュタグが長すぎます")
+            tagBox.isChecked=true
+            tagBox.isVisible=true
+        }
+        else{
+            tagBox.setText(tag)
+            tagBox.isChecked=true
+            tagBox.isVisible=true
+        }
+
+    }
+
+    //チェックボックスのリストにハッシュタグを入れる
+    private fun setTextOnCheckBoxes(tagList: List<String>){
+        var cnt=1
+        for(tag in tagList){
+            setTextOnCheckBox(tag,cnt)
+            if(tagList.size<=4) cnt+=2
+            else cnt++
+        }
+    }
+
+    //チェックボックスのタグをテキスト化して返す
+    private fun getSelectedTags(): String {
+        var tags=""
+        for(i in 1..8){
+            val s:String= "tagbox$i"
+            val boxid=resources.getIdentifier(s,"id",packageName)
+            val checkBox=findViewById<CheckBox>(boxid)
+            if(checkBox.isChecked){
+                tags+=checkBox.text
+                tags+=" "
+            }
+        }
+        return tags
     }
 
     //チェックボックス管理
     private fun setCheckBoxes(l: List<String>, checkbox:List<CheckBox>, checklist:Array<Int>){
-        var showCounter = 0
-        var skippedCounter = 0
-        for( i in 0..5){
-            if ( showCounter < l.size){
-
-                if(l[showCounter].length>8){
-                    if(i%2==0){
-                        checkbox[i].setText(l[showCounter])
-                        showCounter++;
-                        skippedCounter++;
-                        continue;
-
-                    }else{
-                        checkbox[i].setVisibility(View.GONE);
-                        checklist[i] = -1
-                        if(l[showCounter-1].length>8) continue
-                        skippedCounter++;
-                        continue;
-                    }
-                }
-                if(i==(showCounter+skippedCounter)){
-                    checkbox[i].setText(l[showCounter])
-                    showCounter++;
-                }else{
-                    checkbox[i].setVisibility(View.GONE);
-                    checklist[i] = -1
-                }
-            }else{
-                checkbox[i].setVisibility(View.GONE);
-                checklist[i] = -1
-            }
-        }
-        for ( i in 0..5){
-            checkbox[i].setOnClickListener {
-                Toast.makeText(this, checkbox[i].isChecked.toString(), Toast.LENGTH_SHORT).show()
-
-                if(checkbox[i].isChecked){
-                    checklist[i] = 1
-                }else{
-                    checklist[i] = 0
-                }
-            }
-        }
-    }
-
-    //動的ハッシュタグチェックボックス生成
-    private fun createCheckbox(l: List<String>, checkbox:List<CheckBox>, checklist:Array<Int>){
-        val mainActivity = findViewById<LinearLayout>(R.id.container)
-
         var showCounter = 0
         var skippedCounter = 0
         for( i in 0..5){
