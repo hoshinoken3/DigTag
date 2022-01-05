@@ -33,13 +33,19 @@ class MainActivity : AppCompatActivity() {
         }
 
         //Twitterシェアボタン
-        var shareOnTwitterButton : Button = findViewById(R.id.shareOnTwitterButton)
+        var shareOnTwitterButton : ImageButton = findViewById(R.id.shareOnTwitterImageButton)
         //Twitterシェアボタンのイベントリスナー
         shareOnTwitterButton.setOnClickListener {
             openApplicationToShare("test text",Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
         }
+        //Instagramシェアボタン
+        var shareOnInstagramButton : ImageButton = findViewById(R.id.shareOnInstagramImageButton)
+        //Twitterシェアボタンのイベントリスナー
+        shareOnInstagramButton.setOnClickListener {
+            openApplicationToShare("test text",Uri.parse(imgUri),"com.instagram.android","https://instagram.com/")
+        }
         //他アプリシェアボタン
-        var shareOnOtherAppsButton : Button = findViewById(R.id.shareOnOtherAppsButton)
+        var shareOnOtherAppsButton : ImageButton = findViewById(R.id.shareOnOtherAppsImageButton)
         //他アプリシェアボタンのイベントリスナー
         shareOnOtherAppsButton.setOnClickListener {
             openChooserToShare("test string",Uri.parse(imgUri))
@@ -102,6 +108,55 @@ class MainActivity : AppCompatActivity() {
 
     //チェックボックス管理
     private fun setCheckBoxes(l: List<String>, checkbox:List<CheckBox>, checklist:Array<Int>){
+        var showCounter = 0
+        var skippedCounter = 0
+        for( i in 0..5){
+            if ( showCounter < l.size){
+
+                if(l[showCounter].length>8){
+                    if(i%2==0){
+                        checkbox[i].setText(l[showCounter])
+                        showCounter++;
+                        skippedCounter++;
+                        continue;
+
+                    }else{
+                        checkbox[i].setVisibility(View.GONE);
+                        checklist[i] = -1
+                        if(l[showCounter-1].length>8) continue
+                        skippedCounter++;
+                        continue;
+                    }
+                }
+                if(i==(showCounter+skippedCounter)){
+                    checkbox[i].setText(l[showCounter])
+                    showCounter++;
+                }else{
+                    checkbox[i].setVisibility(View.GONE);
+                    checklist[i] = -1
+                }
+            }else{
+                checkbox[i].setVisibility(View.GONE);
+                checklist[i] = -1
+            }
+        }
+        for ( i in 0..5){
+            checkbox[i].setOnClickListener {
+                Toast.makeText(this, checkbox[i].isChecked.toString(), Toast.LENGTH_SHORT).show()
+
+                if(checkbox[i].isChecked){
+                    checklist[i] = 1
+                }else{
+                    checklist[i] = 0
+                }
+            }
+        }
+    }
+
+    //動的ハッシュタグチェックボックス生成
+    private fun createCheckbox(l: List<String>, checkbox:List<CheckBox>, checklist:Array<Int>){
+        val mainActivity = findViewById<LinearLayout>(R.id.container)
+
         var showCounter = 0
         var skippedCounter = 0
         for( i in 0..5){
