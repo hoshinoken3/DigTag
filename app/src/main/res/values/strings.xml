@@ -6,4 +6,13 @@
     <string name="show_selected_image">show selected image</string>
     <string name="shareOnTwitter">share on Twitter</string>
     <string name="shareOnOtherApps">share on Other Apps</string>
+    <string name="tagbox1">tagbox1</string>
+    <string name="tagbox2">tagbox2</string>
+    <string name="tagbox3">tagbox3</string>
+    <string name="tagbox4">tagbox4</string>
+    <string name="tagbox5">tagbox5</string>
+    <string name="tagbox6">tagbox6</string>
+    <string name="tagbox8">tagbox8</string>
+    <string name="tagbox7">tagbox7</string>
+    <string name="shareoninstagram">shareOnInstagram</string>
 </resources>
