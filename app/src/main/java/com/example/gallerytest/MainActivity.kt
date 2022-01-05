@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         initCheckBoxes()
 
         //テストテキスト
-        val taglist = listOf("#春から中大あいあああああああああああああ","#花から中大あああいああああああああああああああいああああああああああああああいあああああああああああああ","#ウマだいすきあいあああああああああああああ","#Aoiちゃん","#いきてる","#Aoiちゃん","#いきてる","test tags")
+        val taglist = listOf("#春から中大あいあああああああああああああ","#花から中大あああいああああああああああああああいああああああああああああああいあああああああああああああ")//"#ウマだいすきあいあああああああああああああ","#Aoiちゃん","#いきてる","#Aoiちゃん","#いきてる","test tags")
         setTextOnCheckBoxes(taglist)
     }
 
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
             val boxid=resources.getIdentifier(s,"id",packageName)
             val checkBox=findViewById<CheckBox>(boxid)
             checkBox.isChecked=false
-            checkBox.isVisible=false
+            checkBox.isVisible=true
             checkBox.setText("")
         }
     }
