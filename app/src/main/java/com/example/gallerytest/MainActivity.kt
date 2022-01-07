@@ -1,5 +1,7 @@
 package com.example.gallerytest
 
+import android.Manifest
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -7,10 +9,21 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
+import java.io.File
+import java.io.FileInputStream
 import java.lang.Exception
+import java.util.*
+import java.text.SimpleDateFormat;
+
 
 class MainActivity : AppCompatActivity() {
     //画像のUri
@@ -20,6 +33,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setTheme(R.style.AppTheme_NoTitleBar);
         setContentView(R.layout.activity_main)
+
+
 
         //画像選択ボタン
         var imageSelectButton : ImageButton = findViewById(R.id.imageButton)
@@ -31,6 +46,21 @@ class MainActivity : AppCompatActivity() {
                 type="image/*"
             }
             startActivityForResult(intent, READ_REQUEST_CODE)
+        }
+
+        //カメラ起動ボタン
+        var cameraButton : Button=findViewById(R.id.launchCameraButton)
+
+        //カメラ起動ボタンのイベントリスナー
+        cameraButton.setOnClickListener {
+            Log.i("cameraButton","Button Pushed")
+            Intent(MediaStore.ACTION_IMAGE_CAPTURE).resolveActivity(packageManager)?.let {
+                if (checkPermission()) {
+                    takePicture()
+                } else {
+                    grantCameraPermission()
+                }
+            } ?: Toast.makeText(this, "camera app error", Toast.LENGTH_LONG).show()
         }
 
         //Twitterシェアボタン
@@ -203,7 +233,101 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object{
+        private const val CAMERA_REQUEST_CODE = 1
+        private const val CAMERA_PERMISSION_REQUEST_CODE = 2
         private const val READ_REQUEST_CODE:Int=42
+    }
+
+    //カメラアプリを起動し、写真を撮る関数
+    private fun takePicture() {
+        Log.i("cameraButton","start camera")
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            addCategory(Intent.CATEGORY_DEFAULT)
+            putExtra(MediaStore.EXTRA_OUTPUT, createSaveFileUri())
+        }
+
+        startActivityForResult(intent, CAMERA_REQUEST_CODE)
+        Log.i("cameraButton","end camera")
+    }
+
+    //アクセス許可を確認する関数
+    private fun checkPermission(): Boolean {
+        Log.i("cameraButton","check permission")
+        val cameraPermission = PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        val extraStoragePermission = PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        Log.i("camera permission",cameraPermission.toString())
+        Log.i("exstorage permission",extraStoragePermission.toString())
+        return cameraPermission && extraStoragePermission
+    }
+
+    //アクセス許可を申請する関数
+    private fun grantCameraPermission(){
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE), CAMERA_PERMISSION_REQUEST_CODE)
+    }
+
+    //カメラで撮った画像のUriを返す関数
+    private fun createSaveFileUri(): Uri {
+        //タイムスタンプ
+        val timeStamp:String = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.JAPAN).format(Date())
+        val imageFileName:String = "DigTag_$timeStamp"
+
+        //保存先のディレクトリ指定
+        val storageDir = getExternalFilesDir(Environment.DIRECTORY_DCIM + "/DigTag")
+        Log.i("timestamp",timeStamp)
+        Log.i("imageFileName",imageFileName)
+
+        //ディレクトリがない場合作成
+        if (storageDir != null) {
+            Log.i("storageDir",storageDir.absolutePath)
+            Log.i("dir exist",storageDir.exists().toString())
+            if (!storageDir.exists()) {
+                storageDir.mkdir()
+                Log.i("create dir",storageDir.exists().toString())
+            }
+        }
+
+        //キャッシュファイルを作成
+        val file = File.createTempFile(imageFileName,".jpg",storageDir)
+        imgUri = file.absolutePath
+
+        //ギャラリーからアクセスできるようにする
+        Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE).also { mediaScanIntent ->
+            mediaScanIntent.data = Uri.fromFile(file)
+            sendBroadcast(mediaScanIntent)
+        }
+
+        /*
+        Intent(Intent.ACTION_).also { mediaScanIntent ->
+            mediaScanIntent.data = Uri.fromFile(file)
+            sendBroadcast(mediaScanIntent)
+        }
+         */
+        return FileProvider.getUriForFile(this, "DigTag", file)
+    }
+
+    //許可を受け取ったとき呼ばれる関数
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        var isGranted = true
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty()) {
+                grantResults.forEach {
+                    if (it != PackageManager.PERMISSION_GRANTED) {
+                        isGranted = false
+                    }
+                }
+            } else {
+                isGranted = false
+            }
+        } else {
+            isGranted = false
+        }
+
+        if (isGranted) {
+            takePicture()
+        } else {
+            grantCameraPermission()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
@@ -213,6 +337,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         when(requestCode){
+            //カメラアプリから帰ってきたとき
+            CAMERA_REQUEST_CODE->{
+                try{
+                    //カメラアプリから画像の情報を受け取る
+                    val contentValues = ContentValues().apply {
+                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                        put("_data", imgUri)
+                    }
+                    contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                    val inputStream = FileInputStream(File(imgUri))
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    val ib=findViewById<ImageView>(R.id.imageButton)
+                    ib.setImageBitmap(bitmap)
+                }
+                catch (e:Exception){
+                    Toast.makeText(this,"error was occurred while taking picture",Toast.LENGTH_LONG).show()
+                }
+            }
+
+            //画像を選択したとき
             READ_REQUEST_CODE->{
                 try{
                     resultData?.data?.also {uri->
@@ -225,7 +369,7 @@ class MainActivity : AppCompatActivity() {
                         //ここでAIにBitmapの情報を流す
                     }
                 }catch (e:Exception){
-                    Toast.makeText(this,"error was occurred",Toast.LENGTH_LONG).show()
+                    Toast.makeText(this,"error was occurred while selecting image",Toast.LENGTH_LONG).show()
                 }
             }
         }
