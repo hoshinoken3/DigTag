@@ -13,7 +13,6 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
-import android.view.View
 import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -31,8 +30,9 @@ class MainActivity : AppCompatActivity() {
     private var imgUri:String=""
 
     //画像選択のダイアログ用文字列
-    val strList = arrayOf("カメラを起動して撮影", "ギャラリーから選択")
-    val strmap = mapOf(
+    private val dialogText:String = "画像の選択方法"
+    private val strList = arrayOf("カメラを起動して撮影", "ギャラリーから選択")
+    private val strmap = mapOf(
         "カメラを起動して撮影" to "camera",
         "ギャラリーから選択" to "gallery",
     )
@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
 
             //ダイアログを表示
             AlertDialog.Builder(this) // FragmentではActivityを取得して生成
-                .setTitle("画像の選択方法")
+                .setTitle(dialogText)
                 .setItems(strList, { dialog, which ->
                     Log.i("dialog select",which.toString())
                     strmap[strList[which]]?.let { it1 -> selectImage(it1) }
@@ -62,27 +62,27 @@ class MainActivity : AppCompatActivity() {
         var shareOnTwitterButton : ImageButton = findViewById(R.id.shareOnTwitterImageButton)
         //Twitterシェアボタンのイベントリスナー
         shareOnTwitterButton.setOnClickListener {
-            openApplicationToShare("test text",Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
+            openApplicationToShare(getSelectedTags(),Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
         }
 
         //Instagramシェアボタン
         var shareOnInstagramButton : ImageButton = findViewById(R.id.shareOnInstagramImageButton)
         //Twitterシェアボタンのイベントリスナー
         shareOnInstagramButton.setOnClickListener {
-            openApplicationToShare("test text",Uri.parse(imgUri),"com.instagram.android","https://instagram.com/")
+            openApplicationToShare(getSelectedTags(),Uri.parse(imgUri),"com.instagram.android","https://instagram.com/")
         }
 
         //他アプリシェアボタン
         var shareOnOtherAppsButton : ImageButton = findViewById(R.id.shareOnOtherAppsImageButton)
         //他アプリシェアボタンのイベントリスナー
         shareOnOtherAppsButton.setOnClickListener {
-            openChooserToShare("test string",Uri.parse(imgUri))
+            openChooserToShare(getSelectedTags(),Uri.parse(imgUri))
         }
 
         //ハッシュタグのチェックボックス初期化
         initCheckBoxes()
 
-        //テストテキスト
+        //テストテキスト(AIが来たら消す)
         val taglist = listOf("#春から中大あいあああああああああああああ","#花から中大あああいああああああああああああああいああああああああああああああいあああああああああああああ")//"#ウマだいすきあいあああああああああああああ","#Aoiちゃん","#いきてる","#Aoiちゃん","#いきてる","test tags")
         setTextOnCheckBoxes(taglist)
     }
@@ -143,18 +143,17 @@ class MainActivity : AppCompatActivity() {
         val s:String= "tagbox$boxNumber"
         val boxid=resources.getIdentifier(s,"id",packageName)
         val tagBox=findViewById<CheckBox>(boxid)
-        if(tagBox==null) println("there is no pointer of tagbox "+boxNumber)
-        else if(tag.length>20){
-            tagBox.setText("ハッシュタグが長すぎます")
+
+        if(tag.length>20){
+            tagBox.text = "#ハッシュタグが長すぎます"
             tagBox.isChecked=true
             tagBox.isVisible=true
         }
         else{
-            tagBox.setText(tag)
+            tagBox.text = tag
             tagBox.isChecked=true
             tagBox.isVisible=true
         }
-
     }
 
     //チェックボックスのリストにハッシュタグを入れる
@@ -180,53 +179,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return tags
-    }
-
-    //チェックボックス管理
-    private fun setCheckBoxes(l: List<String>, checkbox:List<CheckBox>, checklist:Array<Int>){
-        var showCounter = 0
-        var skippedCounter = 0
-        for( i in 0..5){
-            if ( showCounter < l.size){
-
-                if(l[showCounter].length>8){
-                    if(i%2==0){
-                        checkbox[i].setText(l[showCounter])
-                        showCounter++;
-                        skippedCounter++;
-                        continue;
-
-                    }else{
-                        checkbox[i].setVisibility(View.GONE);
-                        checklist[i] = -1
-                        if(l[showCounter-1].length>8) continue
-                        skippedCounter++;
-                        continue;
-                    }
-                }
-                if(i==(showCounter+skippedCounter)){
-                    checkbox[i].setText(l[showCounter])
-                    showCounter++;
-                }else{
-                    checkbox[i].setVisibility(View.GONE);
-                    checklist[i] = -1
-                }
-            }else{
-                checkbox[i].setVisibility(View.GONE);
-                checklist[i] = -1
-            }
-        }
-        for ( i in 0..5){
-            checkbox[i].setOnClickListener {
-                Toast.makeText(this, checkbox[i].isChecked.toString(), Toast.LENGTH_SHORT).show()
-
-                if(checkbox[i].isChecked){
-                    checklist[i] = 1
-                }else{
-                    checklist[i] = 0
-                }
-            }
-        }
     }
 
     companion object{
@@ -371,6 +323,7 @@ class MainActivity : AppCompatActivity() {
                     val bitmap = BitmapFactory.decodeStream(inputStream)
                     val ib=findViewById<ImageView>(R.id.imageButton)
                     ib.setImageBitmap(bitmap)
+                    //AIにビットマップの情報を渡す
                 }
                 catch (e:Exception){
                     Toast.makeText(this,"error was occurred while taking picture",Toast.LENGTH_LONG).show()
