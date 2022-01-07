@@ -13,7 +13,7 @@
         android:layout_height="260dp"
         android:background="@null"
         android:contentDescription="@string/show_selected_image"
-        android:scaleType="centerCrop"
+        android:scaleType="centerInside"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

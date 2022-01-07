@@ -1,6 +1,7 @@
 package com.example.gallerytest
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -29,38 +30,32 @@ class MainActivity : AppCompatActivity() {
     //画像のUri
     private var imgUri:String=""
 
+    //画像選択のダイアログ用文字列
+    val strList = arrayOf("カメラを起動して撮影", "ギャラリーから選択")
+    val strmap = mapOf(
+        "カメラを起動して撮影" to "camera",
+        "ギャラリーから選択" to "gallery",
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setTheme(R.style.AppTheme_NoTitleBar);
         setContentView(R.layout.activity_main)
 
-
-
         //画像選択ボタン
         var imageSelectButton : ImageButton = findViewById(R.id.imageButton)
 
         //画像選択ボタンのイベントリスナ
-        imageSelectButton.setOnClickListener{
-            val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                addCategory(Intent.CATEGORY_OPENABLE)
-                type="image/*"
-            }
-            startActivityForResult(intent, READ_REQUEST_CODE)
-        }
+        imageSelectButton.setOnClickListener {
 
-        //カメラ起動ボタン
-        var cameraButton : Button=findViewById(R.id.launchCameraButton)
-
-        //カメラ起動ボタンのイベントリスナー
-        cameraButton.setOnClickListener {
-            Log.i("cameraButton","Button Pushed")
-            Intent(MediaStore.ACTION_IMAGE_CAPTURE).resolveActivity(packageManager)?.let {
-                if (checkPermission()) {
-                    takePicture()
-                } else {
-                    grantCameraPermission()
-                }
-            } ?: Toast.makeText(this, "camera app error", Toast.LENGTH_LONG).show()
+            //ダイアログを表示
+            AlertDialog.Builder(this) // FragmentではActivityを取得して生成
+                .setTitle("画像の選択方法")
+                .setItems(strList, { dialog, which ->
+                    Log.i("dialog select",which.toString())
+                    strmap[strList[which]]?.let { it1 -> selectImage(it1) }
+                })
+                .show()
         }
 
         //Twitterシェアボタン
@@ -69,12 +64,14 @@ class MainActivity : AppCompatActivity() {
         shareOnTwitterButton.setOnClickListener {
             openApplicationToShare("test text",Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
         }
+
         //Instagramシェアボタン
         var shareOnInstagramButton : ImageButton = findViewById(R.id.shareOnInstagramImageButton)
         //Twitterシェアボタンのイベントリスナー
         shareOnInstagramButton.setOnClickListener {
             openApplicationToShare("test text",Uri.parse(imgUri),"com.instagram.android","https://instagram.com/")
         }
+
         //他アプリシェアボタン
         var shareOnOtherAppsButton : ImageButton = findViewById(R.id.shareOnOtherAppsImageButton)
         //他アプリシェアボタンのイベントリスナー
@@ -236,6 +233,30 @@ class MainActivity : AppCompatActivity() {
         private const val CAMERA_REQUEST_CODE = 1
         private const val CAMERA_PERMISSION_REQUEST_CODE = 2
         private const val READ_REQUEST_CODE:Int=42
+    }
+
+    //画像選択を行う関数
+    private fun selectImage(s:String){
+        //カメラ起動
+        if(s==strmap[strList[0]]){
+            Log.i("cameraButton","Button Pushed")
+            Intent(MediaStore.ACTION_IMAGE_CAPTURE).resolveActivity(packageManager)?.let {
+                if (checkPermission()) {
+                    takePicture()
+                } else {
+                    grantCameraPermission()
+                }
+            } ?: Toast.makeText(this, "camera app error", Toast.LENGTH_LONG).show()
+        }
+
+        //ギャラリーから選択
+        else if(s==strmap[strList[1]]){
+            val intent=Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type="image/*"
+            }
+            startActivityForResult(intent, READ_REQUEST_CODE)
+        }
     }
 
     //カメラアプリを起動し、写真を撮る関数
