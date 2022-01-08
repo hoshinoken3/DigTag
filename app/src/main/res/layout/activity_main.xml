@@ -40,15 +40,16 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginTop="16dp"
+        android:background="@color/cardview_shadow_end_color"
         android:contentDescription="@string/shareOnTwitter"
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/shareOnInstagramImageButton"
-        app:layout_constraintHorizontal_bias="0.565"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageButton"
         app:layout_constraintVertical_bias="0.0"
-        app:srcCompat="@drawable/share_twitter"
+        app:srcCompat="@drawable/share_twitter_small"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <ImageButton
@@ -56,7 +57,7 @@
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_marginTop="16dp"
-        android:background="@color/purple_500"
+        android:background="@color/cardview_shadow_end_color"
         android:contentDescription="@string/shareoninstagram"
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -65,7 +66,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/imageButton"
         app:layout_constraintVertical_bias="0.0"
-        app:srcCompat="@drawable/share_instagram"
+        app:srcCompat="@drawable/share_instagram_white"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <ImageButton
@@ -78,7 +79,7 @@
         android:scaleType="centerCrop"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.379"
+        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/shareOnInstagramImageButton"
         app:layout_constraintTop_toBottomOf="@+id/imageButton"
         app:layout_constraintVertical_bias="0.0"
@@ -93,6 +94,7 @@
         android:layout_marginTop="20dp"
         android:checked="false"
         android:text="@string/tagbox1"
+        android:textAlignment="textStart"
         app:layout_constraintEnd_toStartOf="@+id/tagbox2"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -104,6 +106,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="40dp"
         android:text="@string/tagbox3"
+        android:textAlignment="textStart"
         app:layout_constraintBottom_toTopOf="@+id/tagbox5"
         app:layout_constraintEnd_toStartOf="@+id/tagbox4"
         app:layout_constraintHorizontal_bias="0.0"
@@ -116,6 +119,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="40dp"
         android:text="@string/tagbox5"
+        android:textAlignment="textStart"
         app:layout_constraintBottom_toTopOf="@+id/tagbox7"
         app:layout_constraintEnd_toStartOf="@+id/tagbox6"
         app:layout_constraintHorizontal_bias="0.0"
@@ -129,6 +133,7 @@
         android:layout_marginStart="40dp"
         android:layout_marginBottom="40dp"
         android:text="@string/tagbox7"
+        android:textAlignment="textStart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/tagbox8"
         app:layout_constraintHorizontal_bias="0.0"
@@ -136,41 +141,45 @@
 
     <CheckBox
         android:id="@+id/tagbox2"
-        android:layout_width="0dp"
+        android:layout_width="180dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="210dp"
         android:layout_marginTop="20dp"
         android:text="@string/tagbox2"
+        android:textAlignment="textStart"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/shareOnInstagramImageButton" />
 
     <CheckBox
         android:id="@+id/tagbox4"
-        android:layout_width="0dp"
+        android:layout_width="180dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="210dp"
         android:text="@string/tagbox4"
+        android:textAlignment="textStart"
         app:layout_constraintBottom_toTopOf="@+id/tagbox6"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tagbox2" />
 
     <CheckBox
         android:id="@+id/tagbox6"
-        android:layout_width="0dp"
+        android:layout_width="180dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="210dp"
         android:text="@string/tagbox6"
+        android:textAlignment="textStart"
         app:layout_constraintBottom_toTopOf="@+id/tagbox8"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tagbox4" />
 
     <CheckBox
         android:id="@+id/tagbox8"
-        android:layout_width="0dp"
+        android:layout_width="180dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="210dp"
         android:layout_marginBottom="40dp"
         android:text="@string/tagbox8"
+        android:textAlignment="textStart"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
