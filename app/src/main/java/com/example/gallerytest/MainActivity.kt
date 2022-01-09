@@ -83,8 +83,8 @@ class MainActivity : AppCompatActivity() {
         initCheckBoxes()
 
         //テストテキスト(AIが来たら消す)
-        val taglist = listOf("#春から中大あいあああああああああああああ","#花から中大あああいああああああああああああああいああああああああああああああいあああああああああああああ")//"#ウマだいすきあいあああああああああああああ","#Aoiちゃん","#いきてる","#Aoiちゃん","#いきてる","test tags")
-        setTextOnCheckBoxes(taglist)
+        //val taglist = listOf("#コックカワサキマイクロビキニ部","#花から中大あああいああああああああああああああいああああああああああああああいあああああああああああああ","#ウマだいすきあいあああああああああああああ","#Aoiちゃん","#いきてる","#Aoiちゃん","#いきてる","test tags")
+        //setTextOnCheckBoxes(taglist)
     }
 
     //暗黙的インテント
@@ -144,16 +144,9 @@ class MainActivity : AppCompatActivity() {
         val boxid=resources.getIdentifier(s,"id",packageName)
         val tagBox=findViewById<CheckBox>(boxid)
 
-        if(tag.length>20){
-            tagBox.text = "#ハッシュタグが長すぎます"
-            tagBox.isChecked=true
-            tagBox.isVisible=true
-        }
-        else{
-            tagBox.text = tag
-            tagBox.isChecked=true
-            tagBox.isVisible=true
-        }
+        tagBox.text = tag
+        tagBox.isChecked=true
+        tagBox.isVisible=true
     }
 
     //チェックボックスのリストにハッシュタグを入れる
@@ -269,12 +262,6 @@ class MainActivity : AppCompatActivity() {
             sendBroadcast(mediaScanIntent)
         }
 
-        /*
-        Intent(Intent.ACTION_).also { mediaScanIntent ->
-            mediaScanIntent.data = Uri.fromFile(file)
-            sendBroadcast(mediaScanIntent)
-        }
-         */
         return FileProvider.getUriForFile(this, "DigTag", file)
     }
 
