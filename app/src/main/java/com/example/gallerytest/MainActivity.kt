@@ -362,9 +362,10 @@ class MainActivity : AppCompatActivity() {
     fun intTo12bytebufferRGB(pixel: Int): ByteBuffer {
         val byteBuffer = ByteBuffer.allocate(12)
         try{
-            byteBuffer.putInt(pixel.red)
-            byteBuffer.putInt(pixel.green)
-            byteBuffer.putInt(pixel.blue)
+            byteBuffer.putFloat(pixel.red.toFloat())
+            byteBuffer.putFloat(pixel.green.toFloat())
+            byteBuffer.putFloat(pixel.blue.toFloat())
+            Log.d("TAG", pixel.red.toFloat().toString() + " , " + pixel.blue.toFloat().toString() + " , " + pixel.green.toFloat().toString() )
         }catch (e: Exception) {
             Log.d("TAG", e.message.toString())
         }
@@ -406,7 +407,7 @@ class MainActivity : AppCompatActivity() {
         val sortedIndices = tagsSimilarityArray.withIndex().sortedByDescending{ it.value }.map { it.index }
         val returnTagsList  :MutableList<String> = mutableListOf()
         Log.d("TAG", "==========ranked==========")
-        for(i in sortedIndices){
+        for(i in 0..tagsSimilarityArray.size-1){
             Log.d("TAG", candidateTags[i] + ":" + tagsSimilarityArray[i])
             if(i<6){
                 returnTagsList.add(candidateTags[i])
