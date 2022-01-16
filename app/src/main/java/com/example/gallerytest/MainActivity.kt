@@ -442,7 +442,11 @@ class MainActivity : AppCompatActivity() {
                     ib.setImageBitmap(bitmap)
                     //AIにビットマップの情報を渡す
                     val inputByteBuffer = bitmapToByteBuffer(normalizeBitmap(trimmingBitmap(bitmap), sizeIntoAI, false))
-                    tflite.run(inputByteBuffer, tagsSimilarityArray)
+                    try{
+                        tflite!!.run(inputByteBuffer, tagsSimilarityArray)
+                    }catch (e: Exception) {
+                        Log.d("TAG", e.message.toString())
+                    }
                     setTextOnCheckBoxes(postprocess(tagsSimilarityArray[0], candidateTags))
 
                 }
@@ -463,7 +467,11 @@ class MainActivity : AppCompatActivity() {
                         ib.setImageBitmap(image)
                         //ここでAIにBitmapの情報を流す
                         val inputByteBuffer = bitmapToByteBuffer(normalizeBitmap(trimmingBitmap(image), sizeIntoAI, false))
-                        tflite!!.run(inputByteBuffer, tagsSimilarityArray)
+                        try{
+                            tflite!!.run(inputByteBuffer, tagsSimilarityArray)
+                        }catch (e: Exception) {
+                            Log.d("TAG", e.message.toString())
+                        }
                         setTextOnCheckBoxes(postprocess(tagsSimilarityArray[0], candidateTags))
                     }
                 }catch (e:Exception){
