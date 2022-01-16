@@ -400,17 +400,6 @@ class MainActivity : AppCompatActivity() {
             declaredLength
         )
     }
-    //AIの出力 Tag毎の適合率を表示
-    fun prtTagsSimilarity(tagsSimilarityArray: FloatArray, candidateTags: List<String>){
-        try{
-            Log.d("TAG", "==========normal==========")
-            for(i in 0..tagsSimilarityArray.size-1){
-                Log.d("TAG", candidateTags[i] + ":" + tagsSimilarityArray[i])
-            }
-        }catch (e: Exception) {
-            Log.d("TAG", e.message.toString())
-        }
-    }
 
     //AIが出力した適合率から、一番適合率の高いものを出力
     fun postprocess(tagsSimilarityArray: FloatArray, candidateTagsList: List<String>): List<String>{
@@ -435,7 +424,8 @@ class MainActivity : AppCompatActivity() {
         if(resultCode!= RESULT_OK){
             return
         }
-
+        var tflite: Interpreter? = null
+        tflite = Interpreter(loadModelFile())
         when(requestCode){
             //カメラアプリから帰ってきたとき
             CAMERA_REQUEST_CODE->{
@@ -452,8 +442,6 @@ class MainActivity : AppCompatActivity() {
                     ib.setImageBitmap(bitmap)
                     //AIにビットマップの情報を渡す
                     val inputByteBuffer = bitmapToByteBuffer(normalizeBitmap(trimmingBitmap(bitmap), sizeIntoAI, false))
-                    var tflite: Interpreter? = null
-                    tflite = Interpreter(loadModelFile())
                     tflite.run(inputByteBuffer, tagsSimilarityArray)
                     setTextOnCheckBoxes(postprocess(tagsSimilarityArray[0], candidateTags))
 
@@ -475,8 +463,6 @@ class MainActivity : AppCompatActivity() {
                         ib.setImageBitmap(image)
                         //ここでAIにBitmapの情報を流す
                         val inputByteBuffer = bitmapToByteBuffer(normalizeBitmap(trimmingBitmap(image), sizeIntoAI, false))
-                        var tflite: Interpreter? = null
-                        tflite = Interpreter(loadModelFile())
                         tflite!!.run(inputByteBuffer, tagsSimilarityArray)
                         setTextOnCheckBoxes(postprocess(tagsSimilarityArray[0], candidateTags))
                     }
