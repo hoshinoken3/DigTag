@@ -365,22 +365,37 @@ class MainActivity : AppCompatActivity() {
             byteBuffer.putFloat(pixel.red.toFloat())
             byteBuffer.putFloat(pixel.green.toFloat())
             byteBuffer.putFloat(pixel.blue.toFloat())
-            Log.d("TAG", pixel.red.toFloat().toString() + " , " + pixel.blue.toFloat().toString() + " , " + pixel.green.toFloat().toString() )
-        }catch (e: Exception) {
-            Log.d("TAG", e.message.toString())
+            Log.d("TAG","pixel R"+ pixel.red.toFloat().toString() + " G" + pixel.green.toFloat().toString() + " B" + pixel.blue.toFloat().toString() + " =" +pixel.toString())
+        }catch (e: java.lang.Exception) {
+            Log.d("TAG",  " intTo12bytebufferRGB" +e.message.toString())
         }
         byteBuffer.rewind()
         return  byteBuffer
     }
 
-
+    //AIにいれたBytbufferの再Bitmap化
+    fun bufferRGBToBitmap(byteBuffer: ByteBuffer):Bitmap {
+        byteBuffer.rewind()
+        val intArray = IntArray(128 * 128)
+        for (i in 0..128 * 128 - 1) {
+            val red = byteBuffer.getFloat().toInt()
+            val green = byteBuffer.getFloat().toInt()
+            val blue = byteBuffer.getFloat().toInt()
+            intArray[i] = ((red and 0xff) shl 16) + ((green and 0xff) shl 8) + (blue and 0xff) + (0xff shl 24)
+            Log.d(
+                "TAG",
+                "pixel2 R" + red.toString() + " G" + green.toString() + " B" + blue.toString() + " =" + intArray[i].toString()
+            )
+        }
+        return  Bitmap.createBitmap(intArray ,128,128, Bitmap.Config.ARGB_8888)
+    }
 
     //bitmap > Int表現ARGB(4byte) > IntR,IntG,IntB(3*4byte) > Bytebuffer
     fun bitmapToByteBuffer(bitmap: Bitmap): ByteBuffer {
         val byteBuffer = ByteBuffer.allocate(bitmap.width * bitmap.height * 12)
         for(i in 0..bitmap.width -1){
             for(j in 0..bitmap.height -1) {
-                byteBuffer.put(intTo12bytebufferRGB(bitmap.getPixel(i,j)))
+                byteBuffer.put(intTo12bytebufferRGB(bitmap.getPixel(j,i)))
             }
         }
         byteBuffer.rewind()
@@ -406,7 +421,7 @@ class MainActivity : AppCompatActivity() {
     fun postprocess(tagsSimilarityArray: FloatArray, candidateTagsList: List<String>): List<String>{
         val sortedIndices = tagsSimilarityArray.withIndex().sortedByDescending{ it.value }.map { it.index }
         val returnTagsList  :MutableList<String> = mutableListOf()
-        Log.d("TAG", "==========ranked==========")
+        Log.d("TAG", "==========result==========")
         for(i in 0..tagsSimilarityArray.size-1){
             Log.d("TAG", candidateTags[i] + ":" + tagsSimilarityArray[i])
             if(i<6){
@@ -443,6 +458,7 @@ class MainActivity : AppCompatActivity() {
                     ib.setImageBitmap(bitmap)
                     //AIにビットマップの情報を渡す
                     val inputByteBuffer = bitmapToByteBuffer(normalizeBitmap(trimmingBitmap(bitmap), sizeIntoAI, false))
+                    ib.setImageBitmap(bufferRGBToBitmap(inputByteBuffer))//AIに入れたデータからの復元画像
                     try{
                         tflite!!.run(inputByteBuffer, tagsSimilarityArray)
                     }catch (e: Exception) {
@@ -468,6 +484,7 @@ class MainActivity : AppCompatActivity() {
                         ib.setImageBitmap(image)
                         //ここでAIにBitmapの情報を流す
                         val inputByteBuffer = bitmapToByteBuffer(normalizeBitmap(trimmingBitmap(image), sizeIntoAI, false))
+                        ib.setImageBitmap(bufferRGBToBitmap(inputByteBuffer))//AIに入れたデータからの復元画像
                         try{
                             tflite!!.run(inputByteBuffer, tagsSimilarityArray)
                         }catch (e: Exception) {
