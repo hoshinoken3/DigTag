@@ -1,15 +1,18 @@
 package com.example.gallerytest
 
+import android.os.Bundle
+import android.widget.ImageButton
+import androidx.appcompat.app.AppCompatActivity
+
 import android.Manifest
 import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
-import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
@@ -17,17 +20,34 @@ import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.core.view.isVisible
 import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
 import java.lang.Exception
+import java.nio.ByteBuffer
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
 import java.util.*
 import java.text.SimpleDateFormat;
+import androidx.core.graphics.blue
+import androidx.core.graphics.green
+import androidx.core.graphics.red
+import androidx.core.view.isVisible
+
+import org.tensorflow.lite.Interpreter
 
 
 class MainActivity : AppCompatActivity() {
     //画像のUri
     private var imgUri:String=""
+
+    val sizeIntoAI = 128 //この2乗の画素データが送られる
+    val numberOfTags = 9 //判定可能なタグの種類
+    val DIM_BATCH_SIZE = 1
+    val tagsSimilarityArray =
+        Array(DIM_BATCH_SIZE) { FloatArray(numberOfTags) }//タグの類似度配列
+    val candidateTags = listOf("bird","cake","castle","cat","coffee","dog","flower","mountain","ramen")
+    val MODEL_PATH = "AiModel-allTags.tflite"
 
     //画像選択のダイアログ用文字列
     private val dialogText:String = "画像の選択方法"
@@ -41,6 +61,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setTheme(R.style.AppTheme_NoTitleBar);
         setContentView(R.layout.activity_main)
+        //AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
 
         //画像選択ボタン
         var imageSelectButton : ImageButton = findViewById(R.id.imageButton)
@@ -62,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         var shareOnTwitterButton : ImageButton = findViewById(R.id.shareOnTwitterImageButton)
         //Twitterシェアボタンのイベントリスナー
         shareOnTwitterButton.setOnClickListener {
-            openApplicationToShare(getSelectedTags(),Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
+            openApplicationToShare(getSelectedTags(), Uri.parse(imgUri),"com.twitter.android","https://twitter.com/")
         }
 
         //Instagramシェアボタン
@@ -290,12 +311,137 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
+
+
+
+
+    //(正方形化)トリミング
+    fun trimmingBitmap(bitmap: Bitmap): Bitmap {
+        val trimmedWidth: Int
+        val trimmedHeight: Int
+        val startX: Int
+        val startY: Int
+        if (bitmap.height > bitmap.width) {
+            startX = 0
+            startY = (bitmap.height - bitmap.width) / 2
+            trimmedHeight = bitmap.width
+            trimmedWidth = bitmap.width
+        } else {
+            startX = (bitmap.width - bitmap.height) / 2
+            startY = 0
+            trimmedHeight = bitmap.height
+            trimmedWidth = bitmap.height
+        }
+        return Bitmap.createBitmap(
+            bitmap,
+            startX,
+            startY,
+            trimmedWidth,
+            trimmedHeight
+        )
+    }
+
+    //Bitmap正規化(128*128)
+    fun normalizeBitmap(
+        bitmap: Bitmap,
+        sizeIntoAI: Int,
+        tf: Boolean
+    ): Bitmap {
+        return Bitmap.createScaledBitmap(
+            bitmap,
+            sizeIntoAI,
+            sizeIntoAI,
+            tf
+        )//tfは重みつき平均にするか否か
+    }
+
+
+
+    //1pixelの Int表現ARGB(4byte) > IntR,IntG,IntB(3*4byte) > Bytebuffer
+    fun intTo12bytebufferRGB(pixel: Int): ByteBuffer {
+        val byteBuffer = ByteBuffer.allocate(12)
+        try{
+            byteBuffer.putFloat(pixel.red.toFloat())
+            byteBuffer.putFloat(pixel.green.toFloat())
+            byteBuffer.putFloat(pixel.blue.toFloat())
+            Log.d("TAG","pixel R"+ pixel.red.toFloat().toString() + " G" + pixel.green.toFloat().toString() + " B" + pixel.blue.toFloat().toString() + " =" +pixel.toString())
+        }catch (e: java.lang.Exception) {
+            Log.d("TAG",  " intTo12bytebufferRGB" +e.message.toString())
+        }
+        byteBuffer.rewind()
+        return  byteBuffer
+    }
+
+    //AIにいれたBytbufferの再Bitmap化
+    fun bufferRGBToBitmap(byteBuffer: ByteBuffer):Bitmap {
+        byteBuffer.rewind()
+        val intArray = IntArray(128 * 128)
+        for (i in 0..128 * 128 - 1) {
+            val red = byteBuffer.getFloat().toInt()
+            val green = byteBuffer.getFloat().toInt()
+            val blue = byteBuffer.getFloat().toInt()
+            intArray[i] = ((red and 0xff) shl 16) + ((green and 0xff) shl 8) + (blue and 0xff) + (0xff shl 24)
+            Log.d(
+                "TAG",
+                "pixel2 R" + red.toString() + " G" + green.toString() + " B" + blue.toString() + " =" + intArray[i].toString()
+            )
+        }
+        return  Bitmap.createBitmap(intArray ,128,128, Bitmap.Config.ARGB_8888)
+    }
+
+    //bitmap > Int表現ARGB(4byte) > IntR,IntG,IntB(3*4byte) > Bytebuffer
+    fun bitmapToByteBuffer(bitmap: Bitmap): ByteBuffer {
+        val byteBuffer = ByteBuffer.allocate(bitmap.width * bitmap.height * 12)
+        for(i in 0..bitmap.width -1){
+            for(j in 0..bitmap.height -1) {
+                byteBuffer.put(intTo12bytebufferRGB(bitmap.getPixel(j,i)))
+            }
+        }
+        byteBuffer.rewind()
+        return byteBuffer
+    }
+
+    //tfliteの初期化？
+    @Throws(IOException::class)
+    fun loadModelFile(): MappedByteBuffer {
+        val fileDescriptor = this.assets.openFd(MODEL_PATH)
+        val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
+        val fileChannel = inputStream.channel
+        val startOffset = fileDescriptor.startOffset
+        val declaredLength = fileDescriptor.declaredLength
+        return fileChannel.map(
+            FileChannel.MapMode.READ_ONLY,
+            startOffset,
+            declaredLength
+        )
+    }
+
+    //AIが出力した適合率から、一番適合率の高いものを出力
+    fun postprocess(tagsSimilarityArray: FloatArray, candidateTagsList: List<String>): List<String>{
+        val sortedIndices = tagsSimilarityArray.withIndex().sortedByDescending{ it.value }.map { it.index }
+        val returnTagsList  :MutableList<String> = mutableListOf()
+        Log.d("TAG", "==========result==========")
+        for(i in 0..tagsSimilarityArray.size-1){
+            Log.d("TAG", candidateTags[i] + ":" + tagsSimilarityArray[i])
+            if(i<6){
+                returnTagsList.add(candidateTags[i])
+            }
+        }
+        return returnTagsList
+    }
+
+
+
+
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
         super.onActivityResult(requestCode, resultCode, resultData)
         if(resultCode!= RESULT_OK){
             return
         }
-
+        var tflite: Interpreter? = null
+        tflite = Interpreter(loadModelFile())
         when(requestCode){
             //カメラアプリから帰ってきたとき
             CAMERA_REQUEST_CODE->{
@@ -311,6 +457,15 @@ class MainActivity : AppCompatActivity() {
                     val ib=findViewById<ImageView>(R.id.imageButton)
                     ib.setImageBitmap(bitmap)
                     //AIにビットマップの情報を渡す
+                    val inputByteBuffer = bitmapToByteBuffer(normalizeBitmap(trimmingBitmap(bitmap), sizeIntoAI, false))
+                    ib.setImageBitmap(bufferRGBToBitmap(inputByteBuffer))//AIに入れたデータからの復元画像
+                    try{
+                        tflite!!.run(inputByteBuffer, tagsSimilarityArray)
+                    }catch (e: Exception) {
+                        Log.d("TAG", e.message.toString())
+                    }
+                    setTextOnCheckBoxes(postprocess(tagsSimilarityArray[0], candidateTags))
+
                 }
                 catch (e:Exception){
                     Toast.makeText(this,"error was occurred while taking picture",Toast.LENGTH_LONG).show()
@@ -328,6 +483,14 @@ class MainActivity : AppCompatActivity() {
                         val ib=findViewById<ImageView>(R.id.imageButton)
                         ib.setImageBitmap(image)
                         //ここでAIにBitmapの情報を流す
+                        val inputByteBuffer = bitmapToByteBuffer(normalizeBitmap(trimmingBitmap(image), sizeIntoAI, false))
+                        ib.setImageBitmap(bufferRGBToBitmap(inputByteBuffer))//AIに入れたデータからの復元画像
+                        try{
+                            tflite!!.run(inputByteBuffer, tagsSimilarityArray)
+                        }catch (e: Exception) {
+                            Log.d("TAG", e.message.toString())
+                        }
+                        setTextOnCheckBoxes(postprocess(tagsSimilarityArray[0], candidateTags))
                     }
                 }catch (e:Exception){
                     Toast.makeText(this,"error was occurred while selecting image",Toast.LENGTH_LONG).show()
